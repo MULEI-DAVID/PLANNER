@@ -78,10 +78,11 @@ $users_query = "SELECT id, name, role FROM users ORDER BY name";
 $users_stmt = $db->query($users_query);
 $users = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get financial records for listing
-$finances_query = "SELECT f.*, u.name as assignee_name 
+// Get financial records for listing - Show all family finances
+$finances_query = "SELECT f.*, u.name as assignee_name, c.name as created_by_name 
                    FROM finances f 
                    LEFT JOIN users u ON f.assignee_id = u.id 
+                   LEFT JOIN users c ON f.created_by = c.id 
                    ORDER BY f.date DESC";
 $finances_stmt = $db->query($finances_query);
 $finances = $finances_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -175,6 +176,7 @@ include 'includes/header.php';
                                 <th>Amount</th>
                                 <th>Date</th>
                                 <th>Assignee</th>
+                                <th>Created By</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -209,6 +211,9 @@ include 'includes/header.php';
                                     </td>
                                     <td>
                                         <?php echo $finance['assignee_name'] ? htmlspecialchars($finance['assignee_name']) : 'Unassigned'; ?>
+                                    </td>
+                                    <td>
+                                        <small class="text-info"><?php echo htmlspecialchars($finance['created_by_name']); ?></small>
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
@@ -280,6 +285,10 @@ include 'includes/header.php';
                                 <div class="mobile-table-item">
                                     <span class="mobile-table-label">Assignee:</span>
                                     <span class="mobile-table-value"><?php echo $finance['assignee_name'] ? htmlspecialchars($finance['assignee_name']) : 'Unassigned'; ?></span>
+                                </div>
+                                <div class="mobile-table-item">
+                                    <span class="mobile-table-label">Created by:</span>
+                                    <span class="mobile-table-value text-info"><?php echo htmlspecialchars($finance['created_by_name']); ?></span>
                                 </div>
                                 <?php if ($finance['description']): ?>
                                 <div class="mobile-table-item">

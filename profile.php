@@ -44,6 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         
                         if ($stmt->execute([$name, $email, $phone, $birth_date, $avatar, $_SESSION['user_id']])) {
                             $message = 'Profile updated successfully!';
+                            // Update session data
+                            $_SESSION['user_name'] = $name;
+                            $_SESSION['user_email'] = $email;
+                            $_SESSION['user_avatar'] = $avatar;
                             // Refresh user data
                             $user_stmt->execute([$_SESSION['user_id']]);
                             $user = $user_stmt->fetch(PDO::FETCH_ASSOC);
@@ -439,6 +443,27 @@ document.getElementById('avatar').addEventListener('change', function() {
     const selectedAvatar = this.value;
     const avatarPreview = document.getElementById('avatarPreview');
     avatarPreview.src = 'assets/images/' + selectedAvatar;
+    
+    // Update header avatar in real-time
+    const headerAvatar = document.querySelector('.user-avatar');
+    if (headerAvatar) {
+        headerAvatar.src = 'assets/images/' + selectedAvatar;
+    }
+    
+    // Show a small notification that avatar preview is updated
+    const changeButton = document.querySelector('button[onclick*="avatar"]');
+    if (changeButton) {
+        const originalText = changeButton.innerHTML;
+        changeButton.innerHTML = '<i class="fas fa-check"></i> Avatar Updated';
+        changeButton.classList.remove('btn-outline-primary');
+        changeButton.classList.add('btn-success');
+        
+        setTimeout(function() {
+            changeButton.innerHTML = originalText;
+            changeButton.classList.remove('btn-success');
+            changeButton.classList.add('btn-outline-primary');
+        }, 2000);
+    }
 });
 
 // Initialize avatar preview on page load
@@ -447,6 +472,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const avatarPreview = document.getElementById('avatarPreview');
     if (avatarSelect && avatarPreview) {
         avatarPreview.src = 'assets/images/' + (avatarSelect.value || 'default-avatar.png');
+    }
+    
+    // Handle profile update success message
+    const successMessage = document.querySelector('.alert-success');
+    if (successMessage) {
+        // Refresh the page after 2 seconds to ensure header is updated
+        setTimeout(function() {
+            window.location.reload();
+        }, 2000);
     }
 });
 </script>

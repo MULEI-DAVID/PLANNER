@@ -93,13 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </a>
                 </p>
             </div>
-            
-            <div class="mt-4 text-center">
-                <small class="text-muted">
-                    <i class="fas fa-info-circle"></i> 
-                    Demo Account: admin@cplanner.com / password
-                </small>
-            </div>
+        </div>
         </div>
     </div>
 

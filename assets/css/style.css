@@ -930,3 +930,44 @@ body {
     }
 }
 
+/* Quick Status Update Forms */
+.quick-status-form {
+    margin: 0;
+}
+
+.quick-status-form .form-select {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.875rem;
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+
+.quick-status-form .form-select:focus {
+    border-color: var(--primary-pink);
+    box-shadow: 0 0 0 0.2rem rgba(233, 30, 99, 0.25);
+    outline: none;
+}
+
+.quick-status-form .form-select:hover {
+    border-color: var(--primary-blue);
+}
+
+/* Status-specific colors for quick update dropdowns */
+.quick-status-form .form-select option[value="Pending"] {
+    color: var(--gray);
+}
+
+.quick-status-form .form-select option[value="In Progress"] {
+    color: var(--warning);
+}
+
+.quick-status-form .form-select option[value="Completed"] {
+    color: var(--success);
+}
+
+.quick-status-form .form-select option[value="Cancelled"] {
+    color: var(--danger);
+}
+

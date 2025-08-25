@@ -65,6 +65,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     
                     if ($stmt->execute([$name, $email, $role, $phone, $birth_date, $avatar, $user_id])) {
                         $message = 'Family member updated successfully!';
+                        
+                        // If updating current user, refresh session data
+                        if ($user_id == $_SESSION['user_id']) {
+                            $_SESSION['user_name'] = $name;
+                            $_SESSION['user_email'] = $email;
+                            $_SESSION['user_avatar'] = $avatar;
+                        }
+                        
                         $action = 'list';
                     } else {
                         $message = 'Error updating family member.';
@@ -364,6 +372,28 @@ include 'includes/header.php';
             </form>
         </div>
     </div>
+<?php endif; ?>
+
+<?php if ($action == 'add' || $action == 'edit'): ?>
+<script>
+// Avatar preview functionality for family member form
+document.addEventListener('DOMContentLoaded', function() {
+    const avatarSelect = document.getElementById('avatar');
+    if (avatarSelect) {
+        avatarSelect.addEventListener('change', function() {
+            const selectedAvatar = this.value;
+            
+            // Update header avatar in real-time if editing current user
+            <?php if ($action == 'edit' && $edit_member && $edit_member['id'] == $_SESSION['user_id']): ?>
+            const headerAvatar = document.querySelector('.user-avatar');
+            if (headerAvatar) {
+                headerAvatar.src = 'assets/images/' + selectedAvatar;
+            }
+            <?php endif; ?>
+        });
+    }
+});
+</script>
 <?php endif; ?>
 
 <?php include 'includes/footer.php'; ?>

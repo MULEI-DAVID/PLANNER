@@ -71,6 +71,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $message = 'Error deleting task.';
                 }
                 break;
+                
+            case 'quick_status_update':
+                $task_id = $_POST['task_id'];
+                $new_status = $_POST['new_status'];
+                
+                $query = "UPDATE tasks SET status = ? WHERE id = ?";
+                $stmt = $db->prepare($query);
+                
+                if ($stmt->execute([$new_status, $task_id])) {
+                    $message = 'Task status updated successfully!';
+                } else {
+                    $message = 'Error updating task status.';
+                }
+                break;
         }
     }
 }
@@ -80,10 +94,11 @@ $users_query = "SELECT id, name, role FROM users ORDER BY name";
 $users_stmt = $db->query($users_query);
 $users = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get tasks for listing
-$tasks_query = "SELECT t.*, u.name as assignee_name 
+// Get tasks for listing - Show all family tasks
+$tasks_query = "SELECT t.*, u.name as assignee_name, c.name as created_by_name 
                 FROM tasks t 
                 LEFT JOIN users u ON t.assignee_id = u.id 
+                LEFT JOIN users c ON t.created_by = c.id 
                 ORDER BY t.due_date ASC, t.priority DESC";
 $tasks_stmt = $db->query($tasks_query);
 $tasks = $tasks_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -113,7 +128,8 @@ include 'includes/header.php';
 </div>
 
 <?php if ($message): ?>
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
+    <div class="alert alert-<?php echo strpos($message, 'successfully') !== false ? 'success' : 'info'; ?> alert-dismissible fade show" role="alert">
+        <i class="fas fa-<?php echo strpos($message, 'successfully') !== false ? 'check-circle' : 'info-circle'; ?>"></i>
         <?php echo htmlspecialchars($message); ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
@@ -137,6 +153,7 @@ include 'includes/header.php';
                             <tr>
                                 <th>Task</th>
                                 <th>Assignee</th>
+                                <th>Created By</th>
                                 <th>Category</th>
                                 <th>Priority</th>
                                 <th>Status</th>
@@ -156,6 +173,9 @@ include 'includes/header.php';
                                         <?php echo $task['assignee_name'] ? htmlspecialchars($task['assignee_name']) : 'Unassigned'; ?>
                                     </td>
                                     <td>
+                                        <small class="text-info"><?php echo htmlspecialchars($task['created_by_name']); ?></small>
+                                    </td>
+                                    <td>
                                         <span class="badge badge-info"><?php echo $task['category']; ?></span>
                                     </td>
                                     <td>
@@ -164,9 +184,16 @@ include 'includes/header.php';
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge badge-status-<?php echo strtolower($task['status']); ?>">
-                                            <?php echo $task['status']; ?>
-                                        </span>
+                                        <form method="POST" style="display: inline;" class="quick-status-form">
+                                            <input type="hidden" name="action" value="quick_status_update">
+                                            <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
+                                            <select name="new_status" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width: 120px;">
+                                                <option value="Pending" <?php echo ($task['status'] == 'Pending') ? 'selected' : ''; ?>>Pending</option>
+                                                <option value="In Progress" <?php echo ($task['status'] == 'In Progress') ? 'selected' : ''; ?>>In Progress</option>
+                                                <option value="Completed" <?php echo ($task['status'] == 'Completed') ? 'selected' : ''; ?>>Completed</option>
+                                                <option value="Cancelled" <?php echo ($task['status'] == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
+                                            </select>
+                                        </form>
                                     </td>
                                     <td>
                                         <?php 
@@ -206,6 +233,90 @@ include 'includes/header.php';
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                </div>
+                
+                <!-- Mobile Cards -->
+                <div class="d-md-none">
+                    <?php foreach ($tasks as $task): ?>
+                        <div class="mobile-table-card mb-3">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <form method="POST" style="display: inline;" class="quick-status-form">
+                                        <input type="hidden" name="action" value="quick_status_update">
+                                        <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
+                                        <select name="new_status" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width: 100px;">
+                                            <option value="Pending" <?php echo ($task['status'] == 'Pending') ? 'selected' : ''; ?>>Pending</option>
+                                            <option value="In Progress" <?php echo ($task['status'] == 'In Progress') ? 'selected' : ''; ?>>In Progress</option>
+                                            <option value="Completed" <?php echo ($task['status'] == 'Completed') ? 'selected' : ''; ?>>Completed</option>
+                                            <option value="Cancelled" <?php echo ($task['status'] == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
+                                        </select>
+                                    </form>
+                                    <div class="btn-group" role="group">
+                                        <a href="?action=edit&id=<?php echo $task['id']; ?>" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form method="POST" style="display: inline;" class="delete-btn">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="mobile-table-item">
+                                    <span class="mobile-table-label">Task:</span>
+                                    <span class="mobile-table-value"><?php echo htmlspecialchars($task['title']); ?></span>
+                                </div>
+                                <div class="mobile-table-item">
+                                    <span class="mobile-table-label">Description:</span>
+                                    <span class="mobile-table-value"><?php echo htmlspecialchars(substr($task['description'], 0, 100)) . (strlen($task['description']) > 100 ? '...' : ''); ?></span>
+                                </div>
+                                <div class="mobile-table-item">
+                                    <span class="mobile-table-label">Assignee:</span>
+                                    <span class="mobile-table-value"><?php echo $task['assignee_name'] ? htmlspecialchars($task['assignee_name']) : 'Unassigned'; ?></span>
+                                </div>
+                                <div class="mobile-table-item">
+                                    <span class="mobile-table-label">Created by:</span>
+                                    <span class="mobile-table-value text-info"><?php echo htmlspecialchars($task['created_by_name']); ?></span>
+                                </div>
+                                <div class="mobile-table-item">
+                                    <span class="mobile-table-label">Category:</span>
+                                    <span class="mobile-table-value"><?php echo $task['category']; ?></span>
+                                </div>
+                                <div class="mobile-table-item">
+                                    <span class="mobile-table-label">Priority:</span>
+                                    <span class="mobile-table-value">
+                                        <span class="badge badge-priority-<?php echo strtolower($task['priority']); ?>">
+                                            <?php echo $task['priority']; ?>
+                                        </span>
+                                    </span>
+                                </div>
+                                <div class="mobile-table-item">
+                                    <span class="mobile-table-label">Due Date:</span>
+                                    <span class="mobile-table-value">
+                                        <?php 
+                                        if ($task['due_date']) {
+                                            $due_date = new DateTime($task['due_date']);
+                                            $today = new DateTime();
+                                            
+                                            if ($due_date < $today && $task['status'] != 'Completed') {
+                                                echo '<span class="text-danger">' . $due_date->format('M j, Y') . ' (Overdue)</span>';
+                                            } else {
+                                                echo $due_date->format('M j, Y');
+                                            }
+                                        } else {
+                                            echo 'No due date';
+                                        }
+                                        ?>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
             <?php endif; ?>
         </div>

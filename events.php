@@ -77,10 +77,11 @@ $users_query = "SELECT id, name, role FROM users ORDER BY name";
 $users_stmt = $db->query($users_query);
 $users = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get events for listing
-$events_query = "SELECT e.*, u.name as assignee_name 
+// Get events for listing - Show all family events
+$events_query = "SELECT e.*, u.name as assignee_name, c.name as created_by_name 
                  FROM events e 
                  LEFT JOIN users u ON e.assignee_id = u.id 
+                 LEFT JOIN users c ON e.created_by = c.id 
                  ORDER BY e.start_date ASC";
 $events_stmt = $db->query($events_query);
 $events = $events_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -136,6 +137,7 @@ include 'includes/header.php';
                                 <th>Type</th>
                                 <th>Date & Time</th>
                                 <th>Assignee</th>
+                                <th>Created By</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -172,6 +174,9 @@ include 'includes/header.php';
                                     </td>
                                     <td>
                                         <?php echo $event['assignee_name'] ? htmlspecialchars($event['assignee_name']) : 'Unassigned'; ?>
+                                    </td>
+                                    <td>
+                                        <small class="text-info"><?php echo htmlspecialchars($event['created_by_name']); ?></small>
                                     </td>
                                     <td>
                                         <?php if ($is_past): ?>
