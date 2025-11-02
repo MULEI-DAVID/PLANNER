@@ -3,7 +3,7 @@ class Database {
     private $host = 'localhost';
     private $db_name = 'c_planner';
     private $username = 'root';
-    private $password = '';
+    private $password = 'Z8k2eXxb0JrGw6oV';
     private $conn;
 
     public function getConnection() {
