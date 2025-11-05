@@ -10,21 +10,28 @@ class Database {
     private $conn;
 
     public function getConnection() {
-        $this->conn = null;
+    $this->conn = null;
 
-        try {
-            $this->conn = new PDO(
-                "mysql:host=" . $this->host . ";dbname=" . $this->db_name,
-                $this->username,
-                $this->password
-            );
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        } catch(PDOException $exception) {
-            echo "Connection error: " . $exception->getMessage();
-        }
+    try {
+        $options = [
+            PDO::MYSQL_ATTR_SSL_CA => __DIR__ . "/ca.pem",
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+        ];
 
-        return $this->conn;
+        $this->conn = new PDO(
+            "mysql:host={$this->host};dbname={$this->db_name};port=4000;charset=utf8mb4",
+            $this->username,
+            $this->password,
+            $options
+        );
+
+    } catch (PDOException $exception) {
+        echo "Connection error: " . $exception->getMessage();
     }
+
+    return $this->conn;
+}
+
 }
 ?>
 
