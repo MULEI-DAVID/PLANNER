@@ -1,12 +1,12 @@
 <?php
 class Database {
-    private $host = 'gateway01.eu-central-1.prod.aws.tidbcloud.com';
+    private $host = 'gateway01.ap-northeast-1.prod.aws.tidbcloud.com';
     private $db_name = 'test';
-    private $username = '2t8zMoS1YYFaQgs.root';
+    private $username = 'wusPZjoBXzkSiuV.root';
 
 
     
-    private $password = 'GKTSYPU40msmIVyF';
+    private $password = '9qMwNf8jR9VNpMM3';
     private $conn;
 
     public function getConnection() {
