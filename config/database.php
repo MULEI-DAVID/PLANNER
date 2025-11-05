@@ -1,8 +1,11 @@
 <?php
 class Database {
-    private $host = 'localhost';
-    private $db_name = 'c_planner';
-    private $username = 'root';
+    private $host = 'gateway01.eu-central-1.prod.aws.tidbcloud.com';
+    private $db_name = 'test';
+    private $username = '2t8zMoS1YYFaQgs.root';
+
+
+    
     private $password = 'Z8k2eXxb0JrGw6oV';
     private $conn;
 
