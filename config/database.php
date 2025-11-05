@@ -6,7 +6,7 @@ class Database {
 
 
     
-    private $password = 'Z8k2eXxb0JrGw6oV';
+    private $password = 'GKTSYPU40msmIVyF';
     private $conn;
 
     public function getConnection() {
