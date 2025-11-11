@@ -14,32 +14,50 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $database = new Database();
         $db = $database->getConnection();
         
-        $query = "SELECT id, name, email, password, role, avatar FROM users WHERE email = ?";
-        $stmt = $db->prepare($query);
-        $stmt->execute([$email]);
-        
-        if ($stmt->rowCount() > 0) {
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if (password_verify($password, $user['password'])) {
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_name'] = $user['name'];
-                $_SESSION['user_email'] = $user['email'];
-                $_SESSION['user_role'] = $user['role'];
-                $_SESSION['user_avatar'] = $user['avatar'];
-                
-                header('Location: ../dashboard.php');
-                exit();
-            } else {
-                $error = 'Invalid password';
-            }
+        // Check if connection was successful
+        if ($db === null) {
+            $error = 'Database connection failed. Please try again later.';
         } else {
-            $error = 'User not found';
+            try {
+                $query = "SELECT id, name, email, password, role, avatar FROM users WHERE email = ?";
+                $stmt = $db->prepare($query);
+                
+                if (!$stmt) {
+                    throw new Exception("Prepare failed: " . $db->error);
+                }
+                
+                $stmt->bind_param("s", $email);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                if ($result->num_rows > 0) {
+                    $user = $result->fetch_assoc();
+                    
+                    if (password_verify($password, $user['password'])) {
+                        $_SESSION['user_id'] = $user['id'];
+                        $_SESSION['user_name'] = $user['name'];
+                        $_SESSION['user_email'] = $user['email'];
+                        $_SESSION['user_role'] = $user['role'];
+                        $_SESSION['user_avatar'] = $user['avatar'];
+                        
+                        header('Location: ../dashboard.php');
+                        exit();
+                    } else {
+                        $error = 'Invalid password';
+                    }
+                } else {
+                    $error = 'User not found';
+                }
+                
+                $stmt->close();
+            } catch (Exception $e) {
+                error_log("Login Error: " . $e->getMessage());
+                $error = 'An error occurred. Please try again.';
+            }
         }
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -94,10 +112,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </p>
             </div>
         </div>
-        </div>
     </div>
-
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
