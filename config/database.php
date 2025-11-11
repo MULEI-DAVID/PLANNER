@@ -11,26 +11,29 @@ class Database {
         $this->conn = null;
         
         try {
-            // PDO connection with SSL (no certificate file required)
+            // Build DSN (Data Source Name) with SSL mode
+            $dsn = "mysql:host={$this->host};port={$this->port};dbname={$this->db_name};charset=utf8mb4;sslmode=REQUIRED";
+            
+            // PDO options
             $options = [
-                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_EMULATE_PREPARES => false,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES   => false,
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false
             ];
             
-            $dsn = "mysql:host={$this->host};port={$this->port};dbname={$this->db_name};charset=utf8mb4";
-            
+            // Create PDO connection
             $this->conn = new PDO($dsn, $this->username, $this->password, $options);
             
-        } catch (PDOException $exception) {
-            error_log("Database Connection Error: " . $exception->getMessage());
-            die("Connection error: " . $exception->getMessage());
+        } catch (PDOException $e) {
+            echo "Connection Error: " . $e->getMessage();
+            return null;
         }
         
         return $this->conn;
     }
     
+    // Optional: Close connection method
     public function closeConnection() {
         $this->conn = null;
     }
