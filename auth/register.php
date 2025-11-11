@@ -27,24 +27,50 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $database = new Database();
         $db = $database->getConnection();
         
-        // Check if email already exists
-        $check_query = "SELECT id FROM users WHERE email = ?";
-        $check_stmt = $db->prepare($check_query);
-        $check_stmt->execute([$email]);
-        
-        if ($check_stmt->rowCount() > 0) {
-            $error = 'Email address already registered';
+        if ($db === null) {
+            $error = 'Database connection failed. Please try again later.';
         } else {
-            // Hash password and insert user
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            
-            $insert_query = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
-            $insert_stmt = $db->prepare($insert_query);
-            
-            if ($insert_stmt->execute([$name, $email, $hashed_password, $role])) {
-                $success = 'Registration successful! You can now login.';
-            } else {
-                $error = 'Registration failed. Please try again.';
+            try {
+                // Check if email already exists
+                $check_query = "SELECT id FROM users WHERE email = ?";
+                $check_stmt = $db->prepare($check_query);
+                
+                if (!$check_stmt) {
+                    throw new Exception("Prepare failed: " . $db->error);
+                }
+                
+                $check_stmt->bind_param("s", $email);
+                $check_stmt->execute();
+                $check_result = $check_stmt->get_result();
+                
+                if ($check_result->num_rows > 0) {
+                    $error = 'Email address already registered';
+                } else {
+                    // Hash password and insert user
+                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                    
+                    $insert_query = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
+                    $insert_stmt = $db->prepare($insert_query);
+                    
+                    if (!$insert_stmt) {
+                        throw new Exception("Prepare failed: " . $db->error);
+                    }
+                    
+                    $insert_stmt->bind_param("ssss", $name, $email, $hashed_password, $role);
+                    
+                    if ($insert_stmt->execute()) {
+                        $success = 'Registration successful! You can now login.';
+                    } else {
+                        $error = 'Registration failed. Please try again.';
+                    }
+                    
+                    $insert_stmt->close();
+                }
+                
+                $check_stmt->close();
+            } catch (Exception $e) {
+                error_log("Registration Error: " . $e->getMessage());
+                $error = 'An error occurred. Please try again.';
             }
         }
     }
@@ -166,4 +192,3 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </script>
 </body>
 </html>
-
