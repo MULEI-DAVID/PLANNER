@@ -11,47 +11,30 @@ class Database {
         $this->conn = null;
         
         try {
-            // Initialize mysqli
-            $this->conn = mysqli_init();
+            // PDO connection with SSL (no certificate file required)
+            $options = [
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            ];
             
-            if (!$this->conn) {
-                throw new Exception("mysqli_init failed");
-            }
+            $dsn = "mysql:host={$this->host};port={$this->port};dbname={$this->db_name};charset=utf8mb4";
             
-            // Enable SSL (no certs required for TiDB Serverless)
-            $this->conn->ssl_set(null, null, null, null, null);
+            $this->conn = new PDO($dsn, $this->username, $this->password, $options);
             
-            // Connect using SSL
-            $connected = $this->conn->real_connect(
-                $this->host,
-                $this->username,
-                $this->password,
-                $this->db_name,
-                $this->port,
-                null,
-                MYSQLI_CLIENT_SSL
-            );
-            
-            if (!$connected) {
-                throw new Exception("Connection failed: " . mysqli_connect_error());
-            }
-            
-            // Set charset to utf8mb4 (recommended)
-            $this->conn->set_charset("utf8mb4");
-            
-        } catch (Exception $e) {
-            echo "Connection Error: " . $e->getMessage();
-            return null;
+        } catch (PDOException $exception) {
+            error_log("Database Connection Error: " . $exception->getMessage());
+            die("Connection error: " . $exception->getMessage());
         }
         
         return $this->conn;
     }
     
-    // Optional: Close connection method
     public function closeConnection() {
-        if ($this->conn) {
-            $this->conn->close();
-        }
+        $this->conn = null;
     }
 }
 ?>
+
+
