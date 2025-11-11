@@ -27,11 +27,8 @@ class Database {
             // Log the error (in production, log to file instead of displaying)
             error_log("Database Connection Error: " . $exception->getMessage());
             
-            // For development, you can uncomment this to see the error:
-            // echo "Connection error: " . $exception->getMessage();
-            
-            // Return null - calling code must check for this
-            return null;
+            // Display error for debugging (remove in production)
+            die("Connection error: " . $exception->getMessage());
         }
         
         return $this->conn;
